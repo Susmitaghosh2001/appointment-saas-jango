@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">My Schedule</h1>
+        <p class="text-gray-600">Welcome back, {{ user.get_full_name }}</p>
+    </div>
+    
+    <!-- Today's Schedule -->
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold">Today's Appointments</h2>
+        </div>
+        <div class="p-6">
+            {% if today_appointments %}
+            <div class="space-y-4">
+                {% for booking in today_appointments %}
+                <div class="border rounded-lg p-4 hover:shadow-md transition-all">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-semibold">{{ booking.customer.get_full_name }}</h3>
+                            <p class="text-sm text-gray-600">{{ booking.service.name }} ({{ booking.service.duration_minutes }} min)</p>
+                            <p class="text-sm text-gray-500">{{ booking.start_time|time:"g:i A" }} - {{ booking.end_time|time:"g:i A" }}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if booking.status == 'confirmed' %}bg-green-100 text-green-800{% endif %}">
+                                {{ booking.status|title }}
+                            </span>
+                            {% if booking.status == 'confirmed' %}
+                            <a href="{% url 'bookings:start' booking.id %}" class="text-blue-600 hover:text-blue-800 text-sm">Start</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center py-4">No appointments scheduled for today</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Upcoming Appointments -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold">Upcoming Appointments</h2>
+        </div>
+        <div class="p-6">
+            {% if upcoming_appointments %}
+            <div class="space-y-4">
+                {% for booking in upcoming_appointments %}
+                <div class="border rounded-lg p-4 hover:shadow-md transition-all">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-semibold">{{ booking.customer.get_full_name }}</h3>
+                            <p class="text-sm text-gray-600">{{ booking.service.name }} ({{ booking.service.duration_minutes }} min)</p>
+                            <p class="text-sm text-gray-500">{{ booking.booking_date|date:"M d, Y" }} at {{ booking.start_time|time:"g:i A" }}</p>
+                        </div>
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            {{ booking.status|title }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center py-4">No upcoming appointments</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block title %}Book Appointment - {{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Business Info -->
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="p-6">
+            <div class="flex items-center space-x-4">
+                {% if business.logo %}
+                <img src="{{ business.logo.url }}" alt="{{ business.name }}" class="w-16 h-16 rounded-full">
+                {% else %}
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-store text-blue-600 text-2xl"></i>
+                </div>
+                {% endif %}
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">{{ business.name }}</h1>
+                    <p class="text-gray-600">{{ business.description|default:"Book your appointment online" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Booking Form -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold">Select Service & Time</h2>
+        </div>
+        
+        <div class="p-6">
+            <form method="post" id="bookingForm" x-data="bookingForm()">
+                {% csrf_token %}
+                
+                <!-- Step 1: Select Service -->
+                <div class="mb-8" x-show="step === 1">
+                    <h3 class="text-md font-medium mb-4">1. Choose a Service</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        {% for service in services %}
+                        <label class="border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-all"
+                               :class="{'border-blue-500 bg-blue-50': selectedService === '{{ service.id }}'}">
+                            <input type="radio" name="service" value="{{ service.id }}" 
+                                   class="hidden" @change="selectService('{{ service.id }}')">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h4 class="font-semibold">{{ service.name }}</h4>
+                                    <p class="text-sm text-gray-600">{{ service.duration_minutes }} minutes</p>
+                                </div>
+                                <span class="font-bold text-blue-600">${{ service.price }}</span>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button type="button" @click="nextStep()" 
+                                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                :disabled="!selectedService">
+                            Continue <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Select Staff & Time -->
+                <div class="mb-8" x-show="step === 2">
+                    <h3 class="text-md font-medium mb-4">2. Select Staff & Time</h3>
+                    
+                    <!-- Staff Selection -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Choose Staff (Optional)</label>
+                        <select name="staff" class="w-full border rounded-lg px-3 py-2" @change="loadAvailability()">
+                            <option value="">Any available staff</option>
+                            {% for staff in staff_members %}
+                            <option value="{{ staff.id }}">{{ staff.user.get_full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Date Selection -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+                        <input type="date" name="booking_date" 
+                               class="w-full border rounded-lg px-3 py-2"
+                               min="{{ min_date }}" max="{{ max_date }}"
+                               @change="loadAvailability()">
+                    </div>
+                    
+                    <!-- Time Slots -->
+                    <div class="mb-6" x-show="availableSlots.length > 0">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Available Time Slots</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <template x-for="slot in availableSlots" :key="slot">
+                                <button type="button" @click="selectTime(slot)" 
+                                        class="border rounded-lg px-3 py-2 text-sm hover:bg-blue-50"
+                                        :class="{'bg-blue-600 text-white hover:bg-blue-700': selectedTime === slot}">
+                                    <span x-text="slot"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <button type="button" @click="step = 1" 
+                                class="text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-arrow-left mr-2"></i>Back
+                        </button>
+                        <button type="button" @click="nextStep()" 
+                                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                                :disabled="!selectedTime">
+                            Continue
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Customer Info -->
+                <div x-show="step === 3">
+                    <h3 class="text-md font-medium mb-4">3. Your Information</h3>
+                    
+                    {% if not user.is_authenticated %}
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" name="email" required 
+                               class="w-full border rounded-lg px-3 py-2">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input type="text" name="full_name" required 
+                               class="w-full border rounded-lg px-3 py-2">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                        <input type="tel" name="phone" required 
+                               class="w-full border rounded-lg px-3 py-2">
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+                        <textarea name="notes" rows="3" 
+                                  class="w-full border rounded-lg px-3 py-2"></textarea>
+                    </div>
+                    
+                    <!-- Booking Summary -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <h4 class="font-semibold mb-2">Booking Summary</h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Service:</span>
+                                <span class="font-medium" x-text="selectedServiceName"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Date:</span>
+                                <span class="font-medium" x-text="formattedDate"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Time:</span>
+                                <span class="font-medium" x-text="selectedTime"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Price:</span>
+                                <span class="font-bold text-blue-600" x-text="'$' + servicePrice"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <button type="button" @click="step = 2" 
+                                class="text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-arrow-left mr-2"></i>Back
+                        </button>
+                        <button type="submit" 
+                                class="bg-green-600 text-white px-8 py-2 rounded-lg hover:bg-green-700">
+                            Confirm Booking <i class="fas fa-check ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function bookingForm() {
+    return {
+        step: 1,
+        selectedService: null,
+        selectedStaff: null,
+        selectedDate: null,
+        selectedTime: null,
+        availableSlots: [],
+        services: {{ services_json|safe }},
+        
+        selectService(serviceId) {
+            this.selectedService = serviceId;
+        },
+        
+        async loadAvailability() {
+            const staff = document.querySelector('select[name="staff"]').value;
+            const date = document.querySelector('input[name="booking_date"]').value;
+            
+            if (!date) return;
+            
+            this.selectedStaff = staff;
+            this.selectedDate = date;
+            
+            // Fetch available slots
+            const response = await fetch(`/api/available-slots/?service=${this.selectedService}&staff=${staff}&date=${date}`);
+            const data = await response.json();
+            this.availableSlots = data.slots;
+        },
+        
+        selectTime(time) {
+            this.selectedTime = time;
+        },
+        
+        nextStep() {
+            if (this.step < 3) {
+                this.step++;
+            }
+        },
+        
+        get selectedServiceName() {
+            const service = this.services.find(s => s.id == this.selectedService);
+            return service ? service.name : '';
+        },
+        
+        get servicePrice() {
+            const service = this.services.find(s => s.id == this.selectedService);
+            return service ? service.price : '0';
+        },
+        
+        get formattedDate() {
+            if (!this.selectedDate) return '';
+            const date = new Date(this.selectedDate);
+            return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+    }
+}
+</script>
+{% endblock %}

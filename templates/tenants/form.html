@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load form_tags %}   <!-- If you created the add_class filter -->
+
+{% block title %}Add New Business{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-10 px-4">
+    <div class="bg-white shadow-xl rounded-2xl overflow-hidden">
+        
+        <!-- Header -->
+        <div class="px-8 py-6 border-b bg-gray-50">
+            <h2 class="text-2xl font-semibold text-gray-800 flex items-center gap-3">
+                <i class="fas fa-briefcase text-blue-600"></i>
+                Add New Business
+            </h2>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="p-8 space-y-6">
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <div class="bg-red-50 border border-red-200 text-red-700 p-5 rounded-xl text-sm">
+                {{ form.non_field_errors }}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <p>• {{ error }}</p>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Business Name -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Business Name <span class="text-red-500">*</span></label>
+                {{ form.name|add_class:"w-full px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" }}
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                {{ form.description|add_class:"w-full px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-32 resize-y" }}
+            </div>
+
+            <!-- Phone & Address in one row (optional) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                    {{ form.phone|add_class:"w-full px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" }}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                {{ form.address|add_class:"w-full px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-24 resize-y" }}
+            </div>
+
+            <!-- Logo -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Business Logo</label>
+                {{ form.logo|add_class:"block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-gray-300 rounded-xl p-2" }}
+                <p class="text-xs text-gray-500 mt-1.5">Recommended: Square image (PNG or JPG, max 2MB)</p>
+            </div>
+
+            <!-- Active -->
+            <div class="flex items-center bg-gray-50 p-5 rounded-2xl">
+                {{ form.is_active|add_class:"w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" }}
+                <label class="ml-3 text-gray-700 font-medium cursor-pointer">Active (Make this business visible to customers)</label>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex justify-end gap-4 pt-6">
+                <a href="{% url 'business:list' %}" 
+                   class="px-7 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-all font-medium">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all hover-scale flex items-center gap-2">
+                    <i class="fas fa-save"></i>
+                    Save Business
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

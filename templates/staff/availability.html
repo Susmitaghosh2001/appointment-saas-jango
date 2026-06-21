@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Availability{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold">Set Availability for {{ staff.user.get_full_name }}</h2>
+        </div>
+        
+        <form method="post" class="p-6">
+            {% csrf_token %}
+            
+            <div class="space-y-6">
+                <!-- Regular Weekly Schedule -->
+                <div>
+                    <h3 class="text-md font-medium mb-4">Regular Weekly Schedule</h3>
+                    <div class="space-y-3">
+                        {% for day in days %}
+                        <div class="flex items-center space-x-4">
+                            <div class="w-24">
+                                <span class="text-sm font-medium">{{ day.name }}</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" name="day_{{ day.value }}" id="day_{{ day.value }}" 
+                                       class="h-4 w-4 text-blue-600 rounded"
+                                       {% if day.checked %}checked{% endif %}>
+                                <label for="day_{{ day.value }}" class="text-sm">Working</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="time" name="start_{{ day.value }}" 
+                                       value="{{ day.start_time|default:'09:00' }}"
+                                       class="border rounded px-2 py-1 text-sm">
+                                <span class="text-sm">to</span>
+                                <input type="time" name="end_{{ day.value }}" 
+                                       value="{{ day.end_time|default:'17:00' }}"
+                                       class="border rounded px-2 py-1 text-sm">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Time Off / Blocked Slots -->
+                <div>
+                    <h3 class="text-md font-medium mb-4">Time Off / Blocked Slots</h3>
+                    <div id="blockedSlots" class="space-y-3">
+                        <!-- Dynamic blocked slots will be added here -->
+                    </div>
+                    <button type="button" onclick="addBlockedSlot()" 
+                            class="mt-2 text-blue-600 hover:text-blue-800 text-sm">
+                        <i class="fas fa-plus mr-1"></i>Add Time Off
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-6 border-t mt-6">
+                <a href="{% url 'staff:list' %}" 
+                   class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Save Availability
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function addBlockedSlot() {
+    const container = document.getElementById('blockedSlots');
+    const slotDiv = document.createElement('div');
+    slotDiv.className = 'flex items-center space-x-2';
+    slotDiv.innerHTML = `
+        <input type="date" name="block_date[]" class="border rounded px-2 py-1 text-sm">
+        <input type="time" name="block_start[]" class="border rounded px-2 py-1 text-sm">
+        <span>to</span>
+        <input type="time" name="block_end[]" class="border rounded px-2 py-1 text-sm">
+        <input type="text" name="block_reason[]" placeholder="Reason" class="border rounded px-2 py-1 text-sm flex-1">
+        <button type="button" onclick="this.parentElement.remove()" class="text-red-600 hover:text-red-800">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    container.appendChild(slotDiv);
+}
+</script>
+{% endblock %}

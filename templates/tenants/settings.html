@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Business Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold">Business Settings</h2>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data" class="p-6 space-y-6">
+            {% csrf_token %}
+            
+            <!-- Business Information -->
+            <div>
+                <h3 class="text-md font-medium mb-4">Business Information</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
+                        <input type="text" name="name" value="{{ business.name }}" required
+                               class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea name="description" rows="3" 
+                                  class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">{{ business.description }}</textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                            <input type="tel" name="phone" value="{{ business.phone }}"
+                                   class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" name="email" value="{{ business.email }}"
+                                   class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                        <input type="text" name="address" value="{{ business.address }}"
+                               class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Logo</label>
+                        {% if business.logo %}
+                        <div class="mb-2">
+                            <img src="{{ business.logo.url }}" alt="Business Logo" class="h-20 w-20 object-cover rounded">
+                        </div>
+                        {% endif %}
+                        <input type="file" name="logo" accept="image/*"
+                               class="w-full border rounded-lg px-4 py-2">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Business Hours -->
+            <div>
+                <h3 class="text-md font-medium mb-4">Business Hours</h3>
+                <div class="space-y-3">
+                    {% for day in working_days %}
+                    <div class="flex items-center space-x-4">
+                        <div class="w-24">
+                            <span class="text-sm font-medium">{{ day.name }}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" name="working_{{ day.value }}" 
+                                   {% if day.working %}checked{% endif %}
+                                   class="h-4 w-4 text-blue-600 rounded">
+                            <label class="text-sm">Open</label>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="time" name="open_{{ day.value }}" 
+                                   value="{{ day.open_time|default:'09:00' }}"
+                                   class="border rounded px-2 py-1 text-sm">
+                            <span class="text-sm">to</span>
+                            <input type="time" name="close_{{ day.value }}" 
+                                   value="{{ day.close_time|default:'17:00' }}"
+                                   class="border rounded px-2 py-1 text-sm">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Booking Settings -->
+            <div>
+                <h3 class="text-md font-medium mb-4">Booking Settings</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Slot Duration (minutes)</label>
+                        <select name="slot_duration" class="w-full border rounded-lg px-4 py-2">
+                            <option value="15" {% if settings.slot_duration == 15 %}selected{% endif %}>15 minutes</option>
+                            <option value="30" {% if settings.slot_duration == 30 %}selected{% endif %}>30 minutes</option>
+                            <option value="45" {% if settings.slot_duration == 45 %}selected{% endif %}>45 minutes</option>
+                            <option value="60" {% if settings.slot_duration == 60 %}selected{% endif %}>60 minutes</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
+                        <select name="timezone" class="w-full border rounded-lg px-4 py-2">
+                            <option value="UTC">UTC</option>
+                            <option value="US/Eastern">Eastern Time</option>
+                            <option value="US/Central">Central Time</option>
+                            <option value="US/Mountain">Mountain Time</option>
+                            <option value="US/Pacific">Pacific Time</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notification Settings -->
+            <div>
+                <h3 class="text-md font-medium mb-4">Notification Preferences</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <input type="checkbox" name="email_notifications" 
+                               {% if settings.email_notifications %}checked{% endif %}
+                               class="h-4 w-4 text-blue-600 rounded">
+                        <label class="ml-2 text-sm">Send email notifications for new bookings</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" name="sms_notifications" 
+                               {% if settings.sms_notifications %}checked{% endif %}
+                               class="h-4 w-4 text-blue-600 rounded">
+                        <label class="ml-2 text-sm">Send SMS notifications</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" name="reminder_emails" 
+                               {% if settings.reminder_emails %}checked{% endif %}
+                               class="h-4 w-4 text-blue-600 rounded">
+                        <label class="ml-2 text-sm">Send appointment reminders (24 hours before)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-6 border-t">
+                <a href="{% url 'dashboard:home' %}" 
+                   class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Save Settings
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

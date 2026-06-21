@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AppointPro{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            content: ["./**/*.{html,js}"],
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .hover-scale:hover {
+            transform: scale(1.03);
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'home' %}" class="flex items-center space-x-2">
+                        <i class="fas fa-calendar-check text-blue-600 text-2xl"></i>
+                        <span class="font-bold text-xl text-gray-800">AppointPro</span>
+                    </a>
+                    
+                    {% if user.is_authenticated and user.role != 'customer' %}
+                    <div class="hidden md:flex ml-10 space-x-4">
+                        <a href="{% url 'dashboard:home' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Dashboard</a>
+                        <a href="{% url 'bookings:list' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Bookings</a>
+                        <a href="{% url 'services:list' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Services</a>
+                        <a href="{% url 'staff:list' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Staff</a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" 
+                                    class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-user-circle text-2xl"></i>
+                                <span class="hidden sm:block">{{ user.email }}</span>
+                                <i class="fas fa-chevron-down text-sm"></i>
+                            </button>
+                            
+                            <div x-show="open" @click.away="open = false" 
+                                 class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl py-1 z-50 border border-gray-100">
+                                <a href="{% url 'accounts:profile' %}" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">
+                                    <i class="fas fa-user mr-3"></i>Profile
+                                </a>
+                                {% if user.role == 'super_admin' %}
+                                <a href="{% url 'dashboard:super_admin' %}" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">
+                                    <i class="fas fa-shield-alt mr-3"></i>Super Admin Dashboard
+                                </a>
+                                {% elif user.role == 'business_owner' %}
+                                <a href="{% url 'tenants:settings' %}" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">
+                                    <i class="fas fa-cog mr-3"></i>Business Settings
+                                </a>
+                                <a href="{% url 'subscriptions:manage' %}" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">
+                                    <i class="fas fa-credit-card mr-3"></i>Subscription
+                                </a>
+                                {% endif %}
+                                <div class="border-t my-1"></div>
+                                <a href="{% url 'accounts:logout' %}" class="block px-4 py-3 text-sm text-red-600 hover:bg-gray-50">
+                                    <i class="fas fa-sign-out-alt mr-3"></i>Logout
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-md text-sm font-medium">Login</a>
+                        <a href="{% url 'accounts:register' %}" class="bg-blue-600 text-white hover:bg-blue-700 px-5 py-2 rounded-xl text-sm font-medium transition-all">Sign Up</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        {% for message in messages %}
+        <div class="rounded-xl p-4 mb-4 flex items-start {% if message.tags == 'success' %}bg-green-50 text-green-800{% elif message.tags == 'error' %}bg-red-50 text-red-800{% else %}bg-blue-50 text-blue-800{% endif %}">
+            <i class="fas fa-check-circle mt-0.5 mr-3"></i>
+            <p class="text-sm">{{ message }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-gray-500 text-sm">
+                &copy; 2024 AppointPro. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

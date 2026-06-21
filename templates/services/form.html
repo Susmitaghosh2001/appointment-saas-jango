@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if service %}Edit{% else %}Add{% endif %} Service{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold">{% if service %}Edit{% else %}Add New{% endif %} Service</h2>
+        </div>
+        
+        <form id="service-form" action="" method="post" class="p-6 space-y-6" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4">
+                {% for error in form.non_field_errors %}
+                <p class="text-sm">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                    Service Name <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="name" id="name" 
+                       value="{{ service.name|default:'' }}"
+                       class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                       placeholder="e.g., Haircut, Massage, Consultation" required>
+                <p id="name-error" class="mt-1 text-sm text-red-600 {% if form.name.errors %} {% else %}hidden{% endif %}" aria-live="polite">{% if form.name.errors %}{{ form.name.errors.0 }}{% endif %}</p>
+            </div>
+            
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                </label>
+                <textarea name="description" id="description" rows="3"
+                          class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                          placeholder="Describe your service...">{{ service.description|default:'' }}</textarea>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="duration" class="block text-sm font-medium text-gray-700 mb-2">
+                        Duration (minutes) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" name="duration_minutes" id="duration" required 
+                           value="{{ service.duration_minutes|default:'30' }}"
+                           min="5" step="5"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                    <p id="duration-error" class="mt-1 text-sm text-red-600 {% if form.duration_minutes.errors %} {% else %}hidden{% endif %}" aria-live="polite">{% if form.duration_minutes.errors %}{{ form.duration_minutes.errors.0 }}{% endif %}</p>
+                </div>
+                
+                <div>
+                    <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
+                        Price ($) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" name="price" id="price" required 
+                           value="{{ service.price|default:'0' }}"
+                           min="0" step="0.01"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                    <p id="price-error" class="mt-1 text-sm text-red-600 {% if form.price.errors %} {% else %}hidden{% endif %}" aria-live="polite">{% if form.price.errors %}{{ form.price.errors.0 }}{% endif %}</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" name="is_active" id="is_active" 
+                       {% if service.is_active or not service %}checked{% endif %}
+                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <label for="is_active" class="ml-2 block text-sm text-gray-900">
+                    Active (available for booking)
+                </label>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4 border-t">
+                <a href="{% url 'services:list' %}" 
+                   class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    {% if service %}Update{% else %}Create{% endif %} Service
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('service-form');
+  const nameInput = document.getElementById('name');
+  const durationInput = document.getElementById('duration');
+  const priceInput = document.getElementById('price');
+
+  const errors = {
+    name: document.getElementById('name-error'),
+    duration: document.getElementById('duration-error'),
+    price: document.getElementById('price-error')
+  };
+
+  const setError = (field, message) => {
+    const input = document.getElementById(field);
+    const errorEl = errors[field];
+    input.classList.add('border-red-500', 'focus:border-red-500');
+    errorEl.textContent = message;
+    errorEl.classList.remove('hidden');
+  };
+
+  const clearError = (field) => {
+    const input = document.getElementById(field);
+    const errorEl = errors[field];
+    input.classList.remove('border-red-500', 'focus:border-red-500');
+    errorEl.textContent = '';
+    errorEl.classList.add('hidden');
+  };
+
+  form.addEventListener('submit', function (event) {
+    let valid = true;
+
+    clearError('name');
+    clearError('duration');
+    clearError('price');
+
+    const name = nameInput.value.trim();
+    if (!name) {
+      setError('name', 'Service name is required.');
+      valid = false;
+    } else if (name.length < 3) {
+      setError('name', 'Service name must be at least 3 characters.');
+      valid = false;
+    }
+
+    const duration = Number(durationInput.value);
+    if (!duration || duration < 5) {
+      setError('duration', 'Duration must be at least 5 minutes.');
+      valid = false;
+    }
+
+    const price = Number(priceInput.value);
+    if (isNaN(price) || price < 0) {
+      setError('price', 'Price must be a positive number or zero.');
+      valid = false;
+    }
+
+    if (!valid) {
+      event.preventDefault();
+      const firstError = Object.keys(errors).find((field) => !errors[field].classList.contains('hidden'));
+      if (firstError) {
+        document.getElementById(firstError).focus();
+      }
+    }
+  });
+});
+</script>
+
+{% endblock %}

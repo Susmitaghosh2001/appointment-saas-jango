@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Subscription Management{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Current Plan -->
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold">Current Subscription</h2>
+        </div>
+        <div class="p-6">
+            {% if current_subscription %}
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold">{{ current_subscription.plan.name }}</h3>
+                    <p class="text-gray-600">Valid until {{ current_subscription.end_date|date:"M d, Y" }}</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-2xl font-bold">${{ current_subscription.plan.price }}</span>
+                    <span class="text-gray-600">/month</span>
+                </div>
+            </div>
+            
+            <div class="mt-4 grid grid-cols-3 gap-4">
+                <div class="text-center">
+                    <span class="block text-2xl font-bold">{{ current_subscription.plan.max_staff|default:"∞" }}</span>
+                    <span class="text-gray-600">Staff Limit</span>
+                </div>
+                <div class="text-center">
+                    <span class="block text-2xl font-bold">{{ current_subscription.plan.max_services|default:"∞" }}</span>
+                    <span class="text-gray-600">Services Limit</span>
+                </div>
+                <div class="text-center">
+                    <span class="block text-2xl font-bold">{{ current_subscription.plan.booking_limit|default:"∞" }}</span>
+                    <span class="text-gray-600">Monthly Bookings</span>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center py-4">No active subscription</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Available Plans -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold">Available Plans</h2>
+        </div>
+        <div class="p-6">
+            <div class="grid md:grid-cols-3 gap-6">
+                {% for plan in plans %}
+                <div class="border rounded-lg p-6 hover:shadow-lg transition-all {% if current_subscription.plan.id == plan.id %}border-blue-500 bg-blue-50{% endif %}">
+                    <h3 class="text-lg font-bold mb-2">{{ plan.name }}</h3>
+                    <p class="text-3xl font-bold mb-4">${{ plan.price }}<span class="text-sm text-gray-600">/mo</span></p>
+                    <ul class="space-y-2 mb-6">
+                        <li class="flex items-center text-sm">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            {{ plan.max_staff|default:"Unlimited" }} staff members
+                        </li>
+                        <li class="flex items-center text-sm">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            {{ plan.max_services|default:"Unlimited" }} services
+                        </li>
+                        <li class="flex items-center text-sm">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            {{ plan.booking_limit|default:"Unlimited" }} bookings/month
+                        </li>
+                    </ul>
+                    
+                    {% if current_subscription.plan.id == plan.id %}
+                    <button disabled class="w-full bg-gray-300 text-gray-600 py-2 rounded-lg cursor-not-allowed">
+                        Current Plan
+                    </button>
+                    {% else %}
+                    <a href="{% url 'subscriptions:upgrade' plan.id %}" 
+                       class="block text-center bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                        Upgrade
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment History -->
+    <div class="bg-white rounded-lg shadow mt-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold">Payment History</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for payment in payment_history %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ payment.paid_at|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ payment.subscription.plan.name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">${{ payment.amount }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                {{ payment.payment_status|title }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">No payment history</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

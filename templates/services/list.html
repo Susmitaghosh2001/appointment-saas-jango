@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Services - {{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Services</h1>
+            <p class="text-gray-600">Manage your business services</p>
+        </div>
+        <a href="{% url 'services:create' %}" 
+           class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all">
+            <i class="fas fa-plus mr-2"></i>Add Service
+        </a>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for service in services %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900">{{ service.name }}</div>
+                        <div class="text-sm text-gray-500">{{ service.description|truncatechars:50 }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ service.duration_minutes }} minutes
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${{ service.price }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {% if service.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ service.is_active|yesno:"Active,Inactive" }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="{% url 'services:edit' service.id %}" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'services:toggle' service.id %}" class="text-{% if service.is_active %}red{% else %}green{% endif %}-600 hover:text-{% if service.is_active %}red{% else %}green{% endif %}-900">
+                            <i class="fas fa-{% if service.is_active %}ban{% else %}check{% endif %}"></i>
+                            {% if service.is_active %}Deactivate{% else %}Activate{% endif %}
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                        No services yet. <a href="{% url 'services:create' %}" class="text-blue-600">Create your first service</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
