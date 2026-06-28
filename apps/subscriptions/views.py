@@ -3,10 +3,11 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from apps.accounts.views import super_admin_required
 from .models import Plan, Subscription
 
 class SubscriptionManageView(LoginRequiredMixin, TemplateView):
-    template_name = 'subscriptions/manage.html'
+    template_name = 'subscriptions/form.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -17,7 +18,8 @@ class SubscriptionManageView(LoginRequiredMixin, TemplateView):
         ).first()
         return context
 
-@login_required
+
+@super_admin_required
 def upgrade_subscription(request, plan_id):
     plan = get_object_or_404(Plan, pk=plan_id)
     messages.success(request, f'Upgraded to {plan.name} plan successfully!')
