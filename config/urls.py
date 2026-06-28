@@ -20,7 +20,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
 
+from apps.accounts.views import admin_login, admin_dashboard
+
 urlpatterns = [
+    path('admin/login/', admin_login, name='admin_login'),
+    path('admin/dashboard/', admin_dashboard, name='admin_dashboard'),
+    path('admin/panel/', include('apps.accounts.admin_urls')),
     path('admin/', admin.site.urls),
     
     # Home

@@ -1,0 +1,99 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Users Management{% endblock %}
+
+{% block page_title %}Users Management{% endblock %}
+
+{% block admin_content %}
+<div class="mb-6">
+    <p class="text-gray-600 mb-4">Manage all users across the system.</p>
+</div>
+
+<!-- Search Bar -->
+<div class="mb-6 bg-white rounded-lg shadow p-4">
+    <form method="get" class="flex gap-4">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search by email, name..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            <i class="fas fa-search mr-2"></i>Search
+        </button>
+        {% if query %}
+        <a href="{% url 'admin:users_list' %}" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">
+            Clear
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Users Table -->
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full">
+        <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+            {% for user in page_obj %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <img src="https://ui-avatars.com/api/?name={{ user.get_full_name }}&background=random" alt="Avatar" class="w-8 h-8 rounded-full mr-3">
+                        <div>
+                            <div class="text-sm font-semibold text-gray-900">{{ user.get_full_name|default:user.username }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ user.email }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold 
+                        {% if user.role == 'super_admin' %}bg-purple-100 text-purple-800
+                        {% elif user.role == 'business_owner' %}bg-blue-100 text-blue-800
+                        {% elif user.role == 'staff' %}bg-green-100 text-green-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ user.get_role_display }}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    {% if user.is_active %}
+                    <span class="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">Active</span>
+                    {% else %}
+                    <span class="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800">Inactive</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ user.date_joined|date:"M d, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                    No users found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<nav class="mt-6 flex justify-between items-center">
+    <div class="text-sm text-gray-600">
+        Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </div>
+    <div class="space-x-2">
+        {% if page_obj.has_previous %}
+        <a href="?page=1{% if query %}&q={{ query }}{% endif %}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">First</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Previous</a>
+        {% endif %}
+        
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Last</a>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}
+{% endblock %}

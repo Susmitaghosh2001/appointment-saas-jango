@@ -8,10 +8,10 @@ urlpatterns = [
     # Main dashboard - redirects to role-specific dashboard
     path('', login_required(views.dashboard), name='home'),
     
-    # Super Admin Dashboard
-    path('super-admin/', login_required(views.super_admin_dashboard), name='super_admin'),
-    path('super-admin/<uuid:business_id>/change-plan/', login_required(views.super_admin_change_plan), name='super_admin_change_plan'),
-    path('super-admin/<uuid:business_id>/toggle-business/', login_required(views.super_admin_toggle_business), name='super_admin_toggle_business'),
+    # Admin Dashboard
+    path('admin/', login_required(views.super_admin_dashboard), name='admin'),
+    path('admin/<uuid:business_id>/change-plan/', login_required(views.super_admin_change_plan), name='admin_change_plan'),
+    path('admin/<uuid:business_id>/toggle-business/', login_required(views.super_admin_toggle_business), name='admin_toggle_business'),
     
     # Business Owner Dashboard
     path('business/', login_required(views.business_dashboard), name='business'),

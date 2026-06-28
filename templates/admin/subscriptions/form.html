@@ -1,0 +1,97 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block admin_content %}
+<div class="max-w-2xl">
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <!-- Business -->
+            <div>
+                <label for="{{ form.business.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Business <span class="text-red-500">*</span>
+                </label>
+                {{ form.business }}
+                {% if form.business.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.business.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Plan -->
+            <div>
+                <label for="{{ form.plan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Plan <span class="text-red-500">*</span>
+                </label>
+                {{ form.plan }}
+                {% if form.plan.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.plan.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Start Date -->
+            <div>
+                <label for="{{ form.start_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Start Date <span class="text-red-500">*</span>
+                </label>
+                {{ form.start_date }}
+                {% if form.start_date.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.start_date.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- End Date -->
+            <div>
+                <label for="{{ form.end_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    End Date <span class="text-red-500">*</span>
+                </label>
+                {{ form.end_date }}
+                {% if form.end_date.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.end_date.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Payment Status -->
+            <div>
+                <label for="{{ form.payment_status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Payment Status <span class="text-red-500">*</span>
+                </label>
+                {{ form.payment_status }}
+                {% if form.payment_status.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.payment_status.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Is Active -->
+            <div class="flex items-center">
+                <label for="{{ form.is_active.id_for_label }}" class="flex items-center">
+                    {{ form.is_active }}
+                    <span class="ml-2 text-sm font-medium text-gray-700">Active</span>
+                </label>
+                {% if form.is_active.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.is_active.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-4 pt-6">
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    {{ action }} Subscription
+                </button>
+                <a href="{% url 'admin:subscriptions_list' %}" class="bg-gray-300 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors font-medium">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

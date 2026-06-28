@@ -6,6 +6,10 @@ app_name = 'accounts'
 
 urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
+    path('admin-login/', auth_views.LoginView.as_view(
+        template_name='accounts/admin_login.html',
+        redirect_authenticated_user=True
+    ), name='admin_login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('register/', views.register, name='register'),
     path('profile/', views.profile, name='profile'),

@@ -1,6 +1,8 @@
 from datetime import timedelta
 
+from functools import wraps
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
@@ -66,6 +68,34 @@ def register(request):
     
     return render(request, 'accounts/register.html')
 
+def admin_login(request):
+    if request.user.is_authenticated and request.user.role == 'super_admin':
+        return redirect('admin_dashboard')
+
+    if request.method == 'POST':
+        email = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        user = authenticate(request, username=email, password=password)
+
+        if user is not None:
+            if user.role == 'super_admin':
+                login(request, user)
+                return redirect('admin_dashboard')
+            messages.error(request, 'This account does not have admin access.')
+        else:
+            messages.error(request, 'Invalid email or password.')
+
+    return render(request, 'accounts/admin_login.html')
+
+
+def super_admin_required(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated or request.user.role != 'super_admin':
+            return redirect('admin_login')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
 @login_required
 def profile(request):
     return render(request, 'accounts/profile.html', {'user': request.user})
@@ -73,7 +103,7 @@ def profile(request):
 @login_required
 def dashboard(request):
     if request.user.role == 'super_admin':
-        return redirect('dashboard:super_admin')
+        return redirect('admin_dashboard')
     if request.user.role == 'business_owner':
         return redirect('dashboard:business')
     elif request.user.role == 'staff':
@@ -89,12 +119,8 @@ def business_dashboard(request):
 def staff_dashboard(request):
     return render(request, 'dashboard/staff.html', {'user': request.user})
 
-@login_required
+@super_admin_required
 def super_admin_dashboard(request):
-    if request.user.role != 'super_admin':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard:home')
-
     businesses = Business.objects.select_related('owner').all()
     active_subscriptions = Subscription.objects.filter(is_active=True).count()
     plans = Plan.objects.filter(is_active=True).order_by('price')
@@ -116,11 +142,12 @@ def super_admin_dashboard(request):
         'active_subscriptions': active_subscriptions,
     })
 
-@login_required
+@super_admin_required
+def admin_dashboard(request):
+    return super_admin_dashboard(request)
+
+@super_admin_required
 def super_admin_change_plan(request, business_id):
-    if request.user.role != 'super_admin':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard:home')
 
     business = get_object_or_404(Business, id=business_id)
     if request.method == 'POST':
@@ -147,12 +174,8 @@ def super_admin_change_plan(request, business_id):
 
     return redirect('dashboard:super_admin')
 
-@login_required
+@super_admin_required
 def super_admin_toggle_business(request, business_id):
-    if request.user.role != 'super_admin':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard:home')
-
     business = get_object_or_404(Business, id=business_id)
     business.is_active = not business.is_active
     business.save()
